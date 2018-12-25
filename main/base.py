@@ -16,25 +16,44 @@ class BaseParser:
 	def form_object_list(self, response):
 		return response.text()
 
-	# def get_object_list_url(self, )
+	def get_object_list_kwargs(self):
+		"""
+			THIS IS GENERATOR
+			implement pagination or anther shit
+
+			yield: dict
+		"""
+		raise NotImplemented()
 
 	async def get_object_list(self):
 		"""
 			get list of objects
 			implement pagination and ather logic
 		"""
-		# await for  
-		async with self.session.get() as response:
-			if response.status == 200:
-				return self.form_object_list(response)
-			else:
-				self.write_errors_logs(response)
+		for kw in self.get_object_list_kwargs():
+			async with self.session.get(**kw) as response:
+				if response.status == 200:
+					yield self.form_object_list(response)
+				else:
+					self.write_errors_logs(response)
+					next
+
+	def form_object(self, response):
+		return response.text()
+
+	def get_object_kwargs(self, obj):
+		raise NotImplemented()
 
 	async def get_object(self, obj):
 		"""
 			get all `detail` information
 		"""
-		raise NotImplemented()
+		async with self.session.get(self.get_object_kwargs(obj)) as response:
+			if response.status == 200:
+				return self.form_object(response)
+			else:
+				self.write_errors_logs(response)
+				return False
 
 	async def write_object(self, data):
 		"""
@@ -47,9 +66,10 @@ class BaseParser:
 		"""entery point"""
 		async with self.session_cls() as session:
 			self.session = session  # DSICUSE: mb shitty
-			await for obj in self.get_object_list(): # generator with futers
+			async for obj in self.get_object_list(): # generator with futures
 				detail = await self.get_object(obj)
-				await self.write_object(detail)
+				if detail:
+					await self.write_object(detail)
 
 
 # async def fetch(session, url):
