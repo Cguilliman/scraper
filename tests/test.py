@@ -4,7 +4,7 @@ import os
 import threading
 import urllib.request
 from queue import Queue
-# from multiprocessing import Process
+from multiprocessing import Process
  
  
 class Downloader(threading.Thread):
